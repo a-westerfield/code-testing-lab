@@ -1,0 +1,35 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ gcc libcunit1-dev libgtest-dev python3-pip
+          pip install pytest
+
+      - name: Build and Run C Tests (CUnit)
+        run: |
+          gcc -o c_tests tests/c_tests.c -lcunit -L/usr/lib -I/usr/include
+          ./c_tests
+
+      - name: Build and Run C++ Tests (Google Test)
+        run: |
+          cd /usr/src/gtest
+          sudo cmake CMakeLists.txt
+          sudo make
+          sudo cp lib/*.a /usr/lib
+          cd $GITHUB_WORKSPACE
+          g++ -o cpp_tests tests/cpp_tests.cpp -lgtest -lgtest_main -pthread
+          ./cpp_tests
+
+      - name: Run Python Tests (pytest)
+        run: pytest tests/test_python.py
