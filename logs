@@ -1,0 +1,6 @@
+- name: Save Test Reports
+  if: always()
+  uses: actions/upload-artifact@v3
+  with:
+   name: test-reports
+   path: reports/
