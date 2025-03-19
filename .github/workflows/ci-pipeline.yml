@@ -1,13 +1,16 @@
-name: CI Pipeline
+name: CI Testing Pipeline
 
-on: [push, pull_request]
+on:
+  workflow_dispatch:  # Manually trigger tests
+  push:
+    branches: [main]  # Also runs tests when pushing new code
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Ensure Reports Directory Exists
@@ -19,27 +22,33 @@ jobs:
           sudo apt-get install -y cmake g++ gcc libcunit1-dev libgtest-dev python3-pip
           pip install pytest
 
+      # Run C Tests (if any)
       - name: Build and Run C Tests (CUnit)
+        if: "hashFiles('tests/*.c') != ''"  # Runs only if C test files exist
         run: |
-          gcc -o c_tests tests/c_tests.c -lcunit -L/usr/lib -I/usr/include
-          ./c_tests > reports/c_tests.log 2>&1 || echo "C tests failed"
+          gcc -o c_tests tests/*.c -lcunit -L/usr/lib -I/usr/include
+          ./c_tests
 
+      # Run C++ Tests (if any)
       - name: Build and Run C++ Tests (Google Test)
+        if: "hashFiles('tests/*.cpp') != ''"  # Runs only if C++ test files exist
         run: |
           cd /usr/src/gtest
           sudo cmake CMakeLists.txt
           sudo make
           sudo cp lib/*.a /usr/lib
           cd $GITHUB_WORKSPACE
-          g++ -o cpp_tests tests/cpp_tests.cpp -lgtest -lgtest_main -pthread
-          ./cpp_tests > reports/cpp_tests.log 2>&1 || echo "C++ tests failed"
+          g++ -o cpp_tests tests/*.cpp -lgtest -lgtest_main -pthread
+          ./cpp_tests
 
+      # Run Python Tests (if any)
       - name: Run Python Tests (pytest)
-        run: pytest tests/test_python.py --junitxml=reports/python_test_results.xml || echo "Python tests failed"
+        if: "hashFiles('tests/*.py') != ''"  # Runs only if Python test files exist
+        run: pytest tests/
 
       - name: Save Test Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: reports/
+         name: test-reports
+         path: reports/
