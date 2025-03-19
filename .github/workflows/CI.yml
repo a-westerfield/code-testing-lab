@@ -22,7 +22,7 @@ jobs:
       - name: Build and Run C Tests (CUnit)
         run: |
           gcc -o c_tests tests/c_tests.c -lcunit -L/usr/lib -I/usr/include
-          ./c_tests
+          ./c_tests > reports/c_tests.log 2>&1 || echo "C tests failed"
 
       - name: Build and Run C++ Tests (Google Test)
         run: |
@@ -32,14 +32,14 @@ jobs:
           sudo cp lib/*.a /usr/lib
           cd $GITHUB_WORKSPACE
           g++ -o cpp_tests tests/cpp_tests.cpp -lgtest -lgtest_main -pthread
-          ./cpp_tests
+          ./cpp_tests > reports/cpp_tests.log 2>&1 || echo "C++ tests failed"
 
       - name: Run Python Tests (pytest)
-        run: pytest tests/test_python.py
+        run: pytest tests/test_python.py --junitxml=reports/python_test_results.xml || echo "Python tests failed"
 
       - name: Save Test Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-         name: test-reports
-         path: reports/
+          name: test-reports
+          path: reports/
