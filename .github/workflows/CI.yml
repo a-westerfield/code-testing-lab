@@ -13,13 +13,6 @@ jobs:
       - name: Ensure Reports Directory Exists
         run: mkdir -p reports
 
-      - name: Save Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-         name: test-reports
-         path: reports/
-
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -42,4 +35,11 @@ jobs:
           ./cpp_tests
 
       - name: Run Python Tests (pytest)
-        run: pytest tests/test_python.pys
+        run: pytest tests/test_python.py
+
+      - name: Save Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+         name: test-reports
+         path: reports/
