@@ -33,3 +33,10 @@ jobs:
 
       - name: Run Python Tests (pytest)
         run: pytest tests/test_python.py
+
+      - name: Save Test Reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: reports/
